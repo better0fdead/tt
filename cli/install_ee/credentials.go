@@ -3,14 +3,11 @@ package install_ee
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 	"syscall"
 
 	"github.com/tarantool/tt/cli/config"
-	"github.com/tarantool/tt/cli/util"
 	"golang.org/x/term"
 )
 
@@ -45,20 +42,41 @@ func getCredsInteractive() (UserCredentials, error) {
 // getCredsFromFile gets credentials from file.
 func getCredsFromFile(path string) (UserCredentials, error) {
 	res := UserCredentials{}
-	data, err := ioutil.ReadFile(path)
+
+	fh, err := os.Open(path)
+	if err != nil {
+		return res, err
+	}
+	defer fh.Close()
+
+	info, err := fh.Stat()
 	if err != nil {
 		return res, err
 	}
 
-	re := regexp.MustCompile("(?P<user>.*):(?P<pass>.*)")
-	matches := util.FindNamedMatches(re, strings.TrimSpace(string(data)))
-
-	if len(matches) == 0 {
-		return res, fmt.Errorf("corrupted credentials")
+	// Check file permissions. Error if `group` or `other` bits are set.
+	if info.Mode().Perm()&os.FileMode(0077) != 0 {
+		return res, fmt.Errorf("permissions '%s' for %s are too open.\n\t%s\n\t%s %s'",
+			info.Mode(),
+			path,
+			"It is required that the credential file is NOT accessible by others.",
+			"Can be fixed by running: 'chmod 0600",
+			path,
+		)
 	}
 
-	res.Username = matches["user"]
-	res.Password = matches["pass"]
+	in := bufio.NewReader(fh)
+	res.Username, err = in.ReadString('\n')
+	if err != nil {
+		return res, fmt.Errorf("login not set")
+	}
+	res.Username = strings.TrimSuffix(res.Username, "\n")
+
+	res.Password, err = in.ReadString('\n')
+	if err != nil {
+		return res, fmt.Errorf("password not set")
+	}
+	res.Password = strings.TrimSuffix(res.Password, "\n")
 
 	return res, nil
 }

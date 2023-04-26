@@ -2,6 +2,8 @@ package install_ee
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,19 +29,40 @@ func TestGetCredsFromFile(t *testing.T) {
 			err:    fmt.Errorf("open ./testdata/nonexisting: no such file or directory"),
 		}
 
-	testCases[getCredsFromFileInputValue{path: "./testdata/creds_ok"}] =
+	file, err := ioutil.TempFile("/tmp", "tt-unittest-*.bat")
+	assert.Nil(err)
+	file.WriteString("user\npass\n")
+	defer os.Remove(file.Name())
+
+	testCases[getCredsFromFileInputValue{path: file.Name()}] =
 		getCredsFromFileOutputValue{
 			result: UserCredentials{
-				Username: "toor",
-				Password: "1234",
+				Username: "user",
+				Password: "pass",
 			},
 			err: nil,
 		}
 
-	testCases[getCredsFromFileInputValue{path: "./testdata/creds_bad"}] =
+	file, err = ioutil.TempFile("/tmp", "tt-unittest-*.bat")
+	assert.Nil(err)
+	file.WriteString("user")
+	defer os.Remove(file.Name())
+
+	testCases[getCredsFromFileInputValue{path: file.Name()}] =
 		getCredsFromFileOutputValue{
 			result: UserCredentials{},
-			err:    fmt.Errorf("corrupted credentials"),
+			err:    fmt.Errorf("login not set"),
+		}
+
+	file, err = ioutil.TempFile("/tmp", "tt-unittest-*.bat")
+	assert.Nil(err)
+	file.WriteString("user\n")
+	defer os.Remove(file.Name())
+
+	testCases[getCredsFromFileInputValue{path: file.Name()}] =
+		getCredsFromFileOutputValue{
+			result: UserCredentials{},
+			err:    fmt.Errorf("password not set"),
 		}
 
 	for input, output := range testCases {
