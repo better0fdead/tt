@@ -247,6 +247,14 @@ func getExecutor(console *Console) prompt.Executor {
 		var data string
 		if _, err := console.conn.Eval(consoleEvalFuncBody, args, opts); err != nil {
 			if err == io.EOF {
+				if strings.Contains(console.input, "os.exit(") {
+					console.Close()
+					// Workaround bug https://github.com/c-bata/go-prompt/issues/228
+					rawModeOff := exec.Command("/bin/stty", "-raw", "echo")
+					rawModeOff.Stdin = os.Stdin
+					_ = rawModeOff.Run()
+					rawModeOff.Wait()
+				}
 				log.Fatalf("Connection was closed. Probably instance process isn't running anymore")
 			} else {
 				log.Fatalf("Failed to execute command: %s", err)
