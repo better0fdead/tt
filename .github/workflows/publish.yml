@@ -189,32 +189,32 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    publish-s3:
-      needs: [create-packages-linux, create-packages-macos]
-      runs-on: ubuntu-latest
-      if: startsWith(github.ref, 'refs/tags')
-      steps:
-        - uses: actions/checkout@master
+  publish-s3:
+    needs: [create-packages-linux, create-packages-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags')
+    steps:
+      - uses: actions/checkout@master
 
-        - name: Setup Go
-          uses: actions/setup-go@v2
-          with:
-            go-version: ${{ env.GO_VERSION }}
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
-        - name: Setup Mage
-          run: |
-            git clone https://github.com/magefile/mage
-            cd mage
-            go run bootstrap.go
+      - name: Setup Mage
+        run: |
+          git clone https://github.com/magefile/mage
+          cd mage
+          go run bootstrap.go
 
-        - name: Download packages artifacts
-          uses: actions/download-artifact@v2
-          with:
-            name: packages-linux
-            path: dist
+      - name: Download packages artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: packages-linux
+          path: dist
 
-        - name: Publish packages to RWS
-          env:
-            RWS_URL_PART: https://rws.tarantool.org/release/modules
-            RWS_AUTH: ${{ secrets.RWS_AUTH }}
-          run: mage publishRWS
+      - name: Publish packages to RWS
+        env:
+          RWS_URL_PART: https://rws.tarantool.org/release/modules
+          RWS_AUTH: ${{ secrets.RWS_AUTH }}
+        run: mage publishRWS
