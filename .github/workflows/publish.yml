@@ -190,7 +190,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     publish-s3:
-    needs: create-packages-linux
+    needs: [create-packages-linux, create-packages-macos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags')
     steps:
