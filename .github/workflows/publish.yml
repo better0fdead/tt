@@ -55,7 +55,7 @@ jobs:
         env:
           CGO_LDFLAGS: "-L${{ env.GITHUB_WORKSPACE }}/openssl/lib64"
           CGO_CFLAGS: "-I${{ env.GITHUB_WORKSPACE }}/openssl/include"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GORELEASER }}
         run: |
           goreleaser release ${{ steps.set-goreleaser-flags.outputs.GORELEASER_FLAGS }} --skip-publish --config ./goreleaser/.goreleaser_linux.yml
 
