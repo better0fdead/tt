@@ -54,7 +54,7 @@ test -d $TMPDIR && rm -rf $TMPDIR
 mkdir -p $TMPDIR/go-mod
 
 echo -n "* Download sources... "
-git clone https://github.com/tarantool/tt.git -b $TAG_ORIG --depth=1 --recursive $TT_DIR \
+git clone https://github.com/better0fdead/tt -b $TAG_ORIG --depth=1 --recursive $TT_DIR \
     > /dev/null 2>${TMPDIR}/log.txt
 if [ "$?" != 0 ]; then
     echo "Err: "
